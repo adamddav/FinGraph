@@ -15,6 +15,14 @@ ticker = input("Enter security ticker: ")
 start_date = input("Enter the start date (YY-mm-dd): ")
 end_date = input("Enter the end date (YY-mm-dd): ")
 
+# request price type and optional keyword for second subplot
+price_type = input("Select price data type\n\
+        (Open, High, Low, Close, Adj Close, Volume): ")
+option = input("Select optional secondary plot\n\
+        (Stoch Osc, None): ")
+
+# generate nessecary price /volume data
 data = fgf.query_yahoo_finance(ticker.upper(), start_date, end_date)
 
-fgf.generate_plot(data, ticker, 'none')
+# generate price /volume plot and optional subplot
+fgf.generate_plot(data, ticker, price_type, option)

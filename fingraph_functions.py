@@ -28,13 +28,12 @@ def generate_title(data, ticker, price_type):
     return title
 
 
-def generate_plot(data, ticker, option):
+def generate_plot(data, ticker, price_type, option):
     """
     generate a matplotlib plot for the price / volume data
     with optional second subplot for technical indicator
     """
-    price_type = 'close' 
-
+    option = option.lower()
     if option == 'none':
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
