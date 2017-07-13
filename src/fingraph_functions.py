@@ -8,6 +8,9 @@ import datetime as dt
 from pandas_datareader import data as pdr
 import fix_yahoo_finance as yf
 
+# project imports
+from fingraph_classes import StochasticOscillator
+
 def query_yahoo_finance(ticker, start_date, end_date):
     """
     obtain a dataframe of price and volume data for given ticker
@@ -17,6 +20,7 @@ def query_yahoo_finance(ticker, start_date, end_date):
     """
     yf.pdr_override()
     data = pdr.get_data_yahoo(ticker, start=start_date, end=end_date)
+    print('\n')       # force command prompt onto new line
     return data
 
 def generate_title(data, ticker, price_type):
@@ -28,7 +32,7 @@ def generate_title(data, ticker, price_type):
     return title
 
 
-def generate_plot(data, ticker, price_type, option):
+def generate_plot(data, ticker, price_type, option, settings):
     """
     generate a matplotlib plot for the price / volume data
     with optional second subplot for technical indicator
@@ -39,6 +43,24 @@ def generate_plot(data, ticker, price_type, option):
         ax = fig.add_subplot(1, 1, 1)
         title = generate_title(data, ticker, price_type)
         ax.set_title(title)
-        data[price_type.title()].plot(ax=ax)
+        data[price_type.title()].plot(ax=ax, color='k')
+    elif option == 'stoch osc':
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,
+                                        gridspec_kw=dict(height_ratios=[4, 1]))
+        title1 = generate_title(data, ticker, price_type)
+        ax1.set_title(title1)
+        data[price_type.title()].plot(ax=ax1, color='k')
+
+        if not settings:
+            osc = StochasticOscillator()
+        else:
+            osc = StochasticOscillator(*settings)
+
+        data = osc.add_to_dataframe(data)
+        data['%%K'].plot(ax=ax2, color='b')
+        data['%%D'].plot(ax=ax2, color='r')
+        data['Upper Band'].plot(ax=ax2, color='k')
+        data['Middle Band'].plot(ax=ax2, color='k', linestyle='--')
+        data['Lower Band'].plot(ax=ax2, color='k')
 
     plt.show()
