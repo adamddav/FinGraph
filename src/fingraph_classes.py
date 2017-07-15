@@ -1,9 +1,8 @@
 ## FinGraph -- fingraph_classes.py
 
 # std lib imports
-import numpy as np
+import datetime as dt
 import pandas as pd
-import matplotlib.pyplot as plt
 
 class StochasticOscillator(object):
     """
@@ -20,16 +19,28 @@ class StochasticOscillator(object):
         self.upper_band = upper_band
         self.lower_band = lower_band
 
+    def extend_start_date(self, start_date):
+        """
+        extends requested start date further into the past
+        to accommodate moving window lags
+        """
+        old_start = dt.datetime.strptime(start_date, "%Y-%m-%d")
+        lag_sum = self.length + self.k_period + self.d_period
+        weekends = (lag_sum % 5) * 2
+        start_adjust = lag_sum + weekends + 5
+        new_start = old_start - dt.timedelta(days=start_adjust)
+        return new_start.strftime("%Y-%m-%d")
+
     def add_to_dataframe(self, df):
         """
         add the stochastic oscillator data to a standard
-        Yahoo Finance dataframe.
+        Yahoo Finance dataframe
         """
-        df['High'] = pd.rolling_max(df['Close'], self.length)
-        df['Low'] = pd.rolling_min(df['Close'], self.length)
-        df['Fast %%K'] = 100 * (df['Close'] - df['Low']) / (df['High'] - df['Low'])
-        df['%%K'] = pd.rolling_mean(df['Fast %%K'], self.k_period)
-        df['%%D'] = pd.rolling_mean(df['%%K'], self.d_period)
+        df['High mw'] = df['Close'].rolling(window=self.length).max()
+        df['Low mw'] = df['Close'].rolling(window=self.length).min()
+        df['Fast %%K'] = 100 * (df['Close'] - df['Low mw']) / (df['High mw'] - df['Low mw'])
+        df['%%K'] = df['Fast %%K'].rolling(window=self.k_period).mean()
+        df['%%D'] = df['%%K'].rolling(window=self.d_period).mean()
         df['Upper Band'] = self.upper_band 
         df['Middle Band'] = 50
         df['Lower Band'] = self.lower_band 

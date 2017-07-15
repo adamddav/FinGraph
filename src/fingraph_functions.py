@@ -1,10 +1,8 @@
 ## FinGraph -- fingraph_functions.py
 
 # std lib imports
-import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import datetime as dt
 from pandas_datareader import data as pdr
 import fix_yahoo_finance as yf
 
@@ -32,31 +30,43 @@ def generate_title(data, ticker, price_type):
     return title
 
 
-def generate_plot(data, ticker, price_type, option, settings):
+def generate_plot(ticker, start_date, end_date, price_type, option, settings):
     """
     generate a matplotlib plot for the price / volume data
     with optional second subplot for technical indicator
     """
     option = option.lower()
     if option == 'none':
+        # generate nessecary price / volume data
+        data = query_yahoo_finance(ticker, start_date, end_date)
+
+        # create plot
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
         title = generate_title(data, ticker, price_type)
         ax.set_title(title)
         data[price_type.title()].plot(ax=ax, color='k')
+
     elif option == 'stoch osc':
+        # instantiate stoch osc object
+        if not settings:
+            osc = StochasticOscillator()
+        else:
+            osc = StochasticOscillator(*settings)
+        
+        # obtain adjusted start date and generate data
+        new_start = osc.extend_start_date(start_date)
+        data = query_yahoo_finance(ticker, new_start, end_date)
+        data = osc.add_to_dataframe(data)
+        data = data.ix[start_date:]
+
+        # create plot
         fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,
                                         gridspec_kw=dict(height_ratios=[4, 1]))
         title1 = generate_title(data, ticker, price_type)
         ax1.set_title(title1)
         data[price_type.title()].plot(ax=ax1, color='k')
 
-        if not settings:
-            osc = StochasticOscillator()
-        else:
-            osc = StochasticOscillator(*settings)
-
-        data = osc.add_to_dataframe(data)
         data['%%K'].plot(ax=ax2, color='b')
         data['%%D'].plot(ax=ax2, color='r')
         data['Upper Band'].plot(ax=ax2, color='k')
