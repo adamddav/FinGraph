@@ -47,9 +47,10 @@ def generate_plot(ticker, start_date, end_date, price_type, option, settings):
         # create plot
         fig = plt.figure()
         ax = fig.add_subplot(1, 1, 1)
+        add_date_labels(data, ax)
         title = generate_title(data, ticker, price_type)
         ax.set_title(title)
-        data[price_type.title()].plot(ax=ax, color='k')
+        data[price_type.title()].plot(ax=ax, color='k', use_index=False)
 
     elif option == 'stoch osc':
         # instantiate stoch osc object
@@ -69,14 +70,15 @@ def generate_plot(ticker, start_date, end_date, price_type, option, settings):
                                         gridspec_kw=dict(height_ratios=[4, 1]))
         title1 = generate_title(data, ticker, price_type)
         ax1.set_title(title1)
-        data[price_type.title()].plot(ax=ax1, color='k')
+        add_date_labels(data, ax1)
+        data[price_type.title()].plot(ax=ax1, color='k', use_index=False)
 
         ax2.set_ylim([-5, 105])
-        data['Upper Band'].plot(ax=ax2, color='k')
-        data['Middle Band'].plot(ax=ax2, color='k', linestyle='--')
-        data['Lower Band'].plot(ax=ax2, color='k')
-        data['%%K'].plot(ax=ax2, color='b')
-        data['%%D'].plot(ax=ax2, color='r')
+        data['Upper Band'].plot(ax=ax2, color='k', use_index=False)
+        data['Middle Band'].plot(ax=ax2, color='k', linestyle='--', use_index=False)
+        data['Lower Band'].plot(ax=ax2, color='k', use_index=False)
+        data['%%K'].plot(ax=ax2, color='b', use_index=False)
+        data['%%D'].plot(ax=ax2, color='r', use_index=False)
 
     elif option == 'macd':
         # instantiate macd object
@@ -96,15 +98,26 @@ def generate_plot(ticker, start_date, end_date, price_type, option, settings):
                                         gridspec_kw=dict(height_ratios=[4, 1]))
         title1 = generate_title(data, ticker, price_type)
         ax1.set_title(title1)
-        data[price_type.title()].plot(ax=ax1, color='k')
+        add_date_labels(data, ax1)
+        data[price_type.title()].plot(ax=ax1, color='k', use_index=False)
 
-        upper_bound = max(0, data['MACD'].max()) + 0.5
-        lower_bound = min(0, data['MACD'].min()) - 0.5
+        upper_bound = max(0, data['MACD'].max(), data['Divergence'].max()) + 0.5
+        lower_bound = min(0, data['MACD'].min(), data['Divergence'].min()) - 0.5
         ax2.set_ylim([lower_bound, upper_bound])
-        data['Baseline'].plot(ax=ax2, color='k')
-        data['MACD'].plot(ax=ax2, color='b')
-        data['Signal'].plot(ax=ax2, color='r')
-        ax2.bar(data.index, data['Divergence'])
+        data['Baseline'].plot(ax=ax2, color='k', use_index=False)
+        data['MACD'].plot(ax=ax2, color='b', use_index=False)
+        data['Signal'].plot(ax=ax2, color='r', use_index=False)
+        ax2.bar(range(len(data['Divergence'])), data['Divergence'], color='k')
 
     plt.show()
     return data
+
+def add_date_labels(df, ax):
+    """
+    creates appropriate dates for xlabels
+    """
+    dates = df.index.to_datetime().date
+    ticks = ax.get_xticks().astype(float).tolist()
+    ticks.append(ticks[-1] + (ticks[-1] - ticks[-2]))
+    ax.set_xticklabels([dates[int(100*x)] for x in ticks])
+    return
