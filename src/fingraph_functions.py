@@ -7,7 +7,11 @@ from pandas_datareader import data as pdr
 import fix_yahoo_finance as yf
 
 # project imports
-from fingraph_classes import StochasticOscillator
+from fingraph_classes import StochasticOscillator, MACD
+
+# select ggplot style for matplotlib
+import matplotlib
+matplotlib.style.use('ggplot')
 
 def query_yahoo_finance(ticker, start_date, end_date):
     """
@@ -67,10 +71,40 @@ def generate_plot(ticker, start_date, end_date, price_type, option, settings):
         ax1.set_title(title1)
         data[price_type.title()].plot(ax=ax1, color='k')
 
-        data['%%K'].plot(ax=ax2, color='b')
-        data['%%D'].plot(ax=ax2, color='r')
+        ax2.set_ylim([-5, 105])
         data['Upper Band'].plot(ax=ax2, color='k')
         data['Middle Band'].plot(ax=ax2, color='k', linestyle='--')
         data['Lower Band'].plot(ax=ax2, color='k')
+        data['%%K'].plot(ax=ax2, color='b')
+        data['%%D'].plot(ax=ax2, color='r')
+
+    elif option == 'macd':
+        # instantiate macd object
+        if not settings:
+            macd = MACD()
+        else:
+            macd = MACD(*settings)
+
+        # obtain adjusted start date and generate data
+        new_start = macd.extend_start_date(start_date)
+        data = query_yahoo_finance(ticker, new_start, end_date)
+        data = macd.add_to_dataframe(data)
+        data = data.ix[start_date:]
+
+        # create plot
+        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True,
+                                        gridspec_kw=dict(height_ratios=[4, 1]))
+        title1 = generate_title(data, ticker, price_type)
+        ax1.set_title(title1)
+        data[price_type.title()].plot(ax=ax1, color='k')
+
+        upper_bound = max(0, data['MACD'].max()) + 0.5
+        lower_bound = min(0, data['MACD'].min()) - 0.5
+        ax2.set_ylim([lower_bound, upper_bound])
+        data['Baseline'].plot(ax=ax2, color='k')
+        data['MACD'].plot(ax=ax2, color='b')
+        data['Signal'].plot(ax=ax2, color='r')
+        ax2.bar(data.index, data['Divergence'])
 
     plt.show()
+    return data

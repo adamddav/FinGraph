@@ -14,8 +14,17 @@ end_date = input("\nEnter the end date (yyyy-mm-dd): ")
 price_type = input("\nSelect price data type\n\
         (Open, High, Low, Close, Adj Close, Volume): ")
 option = input("\nSelect optional secondary plot\n\
-        (Stoch Osc, None): ")
+        (MACD, Stoch Osc, None): ")
 settings = []
+
+if option.lower() == 'macd':
+    tune = input("\nWould you like to tune the MACD or use default settings?\n\
+            (y or n): ")
+    if tune.lower() == 'y':
+        settings.append(int(input("\nNumber of days for fast EMA (default 12): ")))
+        settings.append(int(input("\nNumber of days for slow EMA (default 26): ")))
+        settings.append(int(input("\nNumber of days for signal EMA (default 9): ")))
+
 if option.lower() == 'stoch osc':
     tune = input("\nWould you like to tune the Oscillator or use default settings?\n\
             (y or n): ")
