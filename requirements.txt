@@ -1,0 +1,8 @@
+### fingraph/requirements.txt ###
+
+## Requirements without Version Specifiers ##
+matplotlib
+fix_yahoo_finance
+
+## Requirements with Version Specifiers ##
+pandas == 0.19.2
